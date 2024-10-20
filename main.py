@@ -50,7 +50,7 @@ class TrayApp:
         # Create an AppIndicator object (system tray)
         self.indicator = AppIndicator3.Indicator.new(
             "tray_icon",
-            "indicator-messages",  # Use an icon from the system
+            "weather-clear",  # Use an icon from the system
             AppIndicator3.IndicatorCategory.APPLICATION_STATUS
         )
         self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
@@ -142,19 +142,28 @@ class TrayApp:
         Gtk.main_quit()
 
 
-def read_config():
+def read_config(config_path=None):
     global DEBUG
     # Open $HOME/.config/elgatocontrolcenter/config.toml
-    config_path = os.path.expanduser("~/.config/elgatocontrolcenter/config.toml")
-    if not os.path.exists(config_path):
-        os.makedirs(os.path.dirname(config_path), exist_ok=True)
-        os.system("notify-send -u critical 'Error ElgatoControlCenter' 'Config file not found'")
-        exit(1)
+    if config_path is None:
+        config_path = os.path.expanduser("~/.config/elgatocontrolcenter/config.toml")
+        if not os.path.exists(config_path):
+            os.makedirs(os.path.dirname(config_path), exist_ok=True)
+            os.system("notify-send -u critical 'Error ElgatoControlCenter' 'Config file not found'")
+            exit(1)
+    else:
+        if not os.path.exists(config_path):
+            os.system("notify-send -u critical 'Error ElgatoControlCenter' 'Config file not found'")
+            exit(1)
     
     if DEBUG: print(f"Reading config from {config_path}")
 
-    with open(config_path, "rb") as f:
-        config = tomllib.load(f)
+    try:
+        with open(config_path, "rb") as f:
+            config = tomllib.load(f)
+    except tomllib.TOMLDecodeError:
+        os.system("notify-send -u critical 'Error ElgatoControlCenter' 'Config file is not a valid TOML file'")
+        exit(1)
 
     try:
         ip = config["network"]["ip"]
@@ -167,14 +176,18 @@ def read_config():
 
 def main():
     # Parse command line arguments
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="ECC System Tray")
     parser.add_argument("--debug", help="Enable debug mode", action="store_true")
+    parser.add_argument("--config", help="Select a config file (default path in ~/.config/elgatocontrolcenter/)", type=str)
+    parser.add_argument("--version", action="version", version="%(prog)s 1.0")
     args = parser.parse_args()
     global DEBUG
     DEBUG = args.debug
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)  # Allow Ctrl+C to close the app
-    ip, port = read_config()
+
+    ip, port = read_config(args.config)
+    print(f"Attaching to {ip}:{port}...")
     app = TrayApp(ip=ip, port=port)
     Gtk.main()
 
