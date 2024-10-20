@@ -22,3 +22,21 @@ The script needs fetches the IP and port of the Elgato device via a `config.toml
 ip = "192.168.17.11"
 port = 9123
 ```
+## Running the code
+Before running the code it is essential to install the `requirements.txt` dependencies, it is recommended to use a python virtual environment:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+> Use the appropriate `activate` accordingly (eg. `activate.fish` for `fish` shell)
+```bash
+pip3 install -r requirements.txt
+```
+The code is then runnable as following:
+```bash
+python3 main.py
+```
+> For debugging purposes:
+> ```bash
+> python3 main.py --debug
+> ```
