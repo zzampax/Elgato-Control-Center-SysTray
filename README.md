@@ -1,4 +1,4 @@
-# ElgatoControlCenter System Tray
+# Elgato-Control-Center-SysTray
 
 <br>
 <div align="center">
